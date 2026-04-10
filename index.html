@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小恐龍故事書櫃</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans TC',sans-serif;background:#fdf6ec;min-height:100vh;overflow-x:hidden}
+.header{background:linear-gradient(135deg,#81c784 0%,#66bb6a 50%,#a5d6a7 100%);padding:24px 20px 20px;text-align:center;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:rgba(255,255,255,.15);border-radius:50%}
+.header::after{content:'';position:absolute;bottom:-30px;left:20px;width:80px;height:80px;background:rgba(255,255,255,.1);border-radius:50%}
+.header h1{font-size:clamp(24px,5vw,36px);color:#fff;text-shadow:2px 2px 4px rgba(0,0,0,.15);position:relative;z-index:1}
+.header h1 .emoji{font-size:1.1em}
+.header p{color:rgba(255,255,255,.9);font-size:clamp(13px,2.5vw,16px);margin-top:6px;position:relative;z-index:1}
+.search-bar{max-width:500px;margin:20px auto 0;position:relative;z-index:1}
+.search-bar input{width:100%;padding:12px 20px 12px 44px;border:none;border-radius:50px;font-size:16px;font-family:'Noto Sans TC',sans-serif;background:rgba(255,255,255,.95);box-shadow:0 2px 10px rgba(0,0,0,.1);outline:none;transition:box-shadow .3s}
+.search-bar input:focus{box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.search-bar .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:18px;opacity:.4}
+.tag-filter{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:16px 20px 0;max-width:600px;margin:0 auto}
+.tag-btn{padding:6px 16px;border:2px solid #a5d6a7;border-radius:20px;background:#fff;color:#4caf50;font-size:14px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;transition:all .2s}
+.tag-btn:hover,.tag-btn.active{background:#66bb6a;color:#fff;border-color:#66bb6a;transform:scale(1.05)}
+.bookshelf{max-width:1000px;margin:0 auto;padding:24px 20px 40px}
+.shelf-label{font-size:18px;color:#795548;font-weight:700;margin-bottom:16px;padding-left:4px}
+.shelf-label span{opacity:.6;font-weight:400;font-size:14px;margin-left:8px}
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px}
+.book-card{background:#fffdf8;border-radius:20px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.08);cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.book-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 12px 32px rgba(0,0,0,.15)}
+.book-card .cover-wrap{position:relative;overflow:hidden;aspect-ratio:16/9}
+.book-card .cover-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.book-card:hover .cover-wrap img{transform:scale(1.05)}
+.book-card .cover-overlay{position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(transparent,rgba(0,0,0,.5));pointer-events:none}
+.book-card .cover-title{position:absolute;bottom:12px;left:16px;right:16px;color:#fff;font-size:18px;font-weight:900;text-shadow:1px 1px 4px rgba(0,0,0,.4)}
+.book-card .card-body{padding:14px 16px 16px}
+.book-card .card-desc{font-size:13px;color:#795548;line-height:1.6;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book-card .card-tags{display:flex;flex-wrap:wrap;gap:6px}
+.book-card .card-tag{padding:3px 10px;background:#e8f5e9;color:#4caf50;border-radius:12px;font-size:12px;font-weight:700}
+.book-card .card-age{padding:3px 10px;background:#fff3e0;color:#e65100;border-radius:12px;font-size:12px;font-weight:700}
+.no-results{text-align:center;padding:60px 20px;color:#a1887f}
+.no-results .big-emoji{font-size:48px;margin-bottom:12px}
+.no-results p{font-size:16px}
+.reader-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;backdrop-filter:blur(4px)}
+.reader-overlay.open{display:flex;justify-content:center;align-items:flex-start}
+.reader{background:#fdf6ec;width:100%;max-width:800px;max-height:100vh;overflow-y:auto;position:relative;animation:slideUp .4s ease}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.reader-header{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#81c784,#66bb6a);padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.btn-back{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.25);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0}
+.btn-back:hover{background:rgba(255,255,255,.4)}
+.reader-header h2{color:#fff;font-size:clamp(16px,3.5vw,22px);font-weight:900;text-shadow:1px 1px 2px rgba(0,0,0,.15)}
+.reader-pages{padding:20px 16px 80px}
+.page-card{background:#fffdf8;border-radius:16px;overflow:hidden;margin-bottom:24px;box-shadow:0 3px 12px rgba(0,0,0,.06)}
+.page-card img{width:100%;display:block}
+.page-card .page-text{padding:16px 20px 20px;position:relative}
+.page-card .page-num{position:absolute;top:-14px;left:16px;width:28px;height:28px;background:#8bc34a;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.page-card .page-text p{font-size:clamp(15px,2.8vw,20px);line-height:1.8;color:#4e342e;font-weight:700}
+.page-card .page-text p .highlight{color:#e67e22}
+.page-card .page-text p .quote{color:#e91e63}
+.reader-nav{position:sticky;bottom:0;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);padding:10px 16px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+.nav-dot{width:36px;height:36px;border-radius:50%;border:2px solid #c8e6c9;background:#fff;color:#66bb6a;font-size:13px;font-weight:900;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.nav-dot:hover,.nav-dot.active{background:#66bb6a;color:#fff;border-color:#66bb6a;transform:scale(1.15)}
+.footer{text-align:center;padding:20px;color:#bcaaa4;font-size:13px}
+.parent-tip{background:linear-gradient(135deg,#fff8e1,#fff3e0);border-radius:16px;padding:20px;margin:0 16px 24px;border-left:4px solid #ffb74d}
+.parent-tip h3{color:#e65100;font-size:16px;margin-bottom:8px}
+.parent-tip p{color:#795548;font-size:14px;line-height:1.7}
+@media(max-width:600px){.books-grid{grid-template-columns:1fr}.reader{border-radius:0}}
+@media(min-width:601px){.reader{border-radius:20px;margin-top:20px;max-height:calc(100vh - 40px)}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1><span class="emoji">🦕</span> 小恐龍故事書櫃 <span class="emoji">📚</span></h1>
+  <p>和小雷、小朵、皮洛一起冒險吧！</p>
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜尋故事名稱、角色或主題..." oninput="filterBooks()">
+  </div>
+</div>
+<div class="tag-filter" id="tagFilter"></div>
+<div class="bookshelf" id="bookshelf"></div>
+<div class="footer">用愛做的故事書 ❤️ 爸爸媽媽的手作繪本</div>
+<div class="reader-overlay" id="readerOverlay" onclick="if(event.target===this)closeReader()">
+  <div class="reader" id="reader"></div>
+</div>
+<script>
+const STORIES = [{"id": "dino-adventure-1", "title": "三隻小恐龍的大冒險", "subtitle": "小雷、小朵和皮洛的第一次冒險", "author": "爸爸媽媽 著", "tags": ["恐龍", "冒險", "友情", "合作"], "age": "2-4歲", "description": "三隻小恐龍——暴龍小雷、三角龍小朵、翼手龍皮洛，在椰子樹下展開了一場大冒險！他們會遇到什麼困難呢？", "coverThumb": "web/thumb1.jpg", "pages": [{"pageNum": 1, "image": "web/page1.jpg", "text": "椰子樹下，三隻小恐龍在玩者。\n綠色的小雷力氣好大好大！\n藍色的小朵跑得好快好快！\n橘色的皮洛飛得好高好高！"}, {"pageNum": 2, "image": "web/page2.jpg", "text": "「咦？那邊有什麼？」\n小雷看到遠遠的山上，\n有一朵好大好大的花！\n「我們去看看吧！」\n三隻小恐龍出發了！"}, {"pageNum": 3, "image": "web/page3.jpg", "text": "走呀走，前面有好大的石頭！\n「怎麼辦？過不去了！」\n「我來！我推推推！」\n小雷用力一推——\n石頭滾開了！\n「小雷好厲害！」大家一起拍拍手。"}, {"pageNum": 4, "image": "web/page4.jpg", "text": "走呀走，前面有好寬的河！\n水嘩啦嘩啦地流。\n「怎麼辦？過不去了！」\n「我來！我跑跑跑！」\n小朵背著大家，衝呀衝——\n跳過河了！\n「小朵好厲害！」大家一起拍拍手。"}, {"pageNum": 5, "image": "web/page5.jpg", "text": "走呀走，前面有好高的山！\n「怎麼辦？上不去了！」\n「我來！我飛飛飛！」\n皮洛張開翅膀，\n載著大家飛呀飛——\n飛到山頂了！\n「皮洛好厲害！」大家一起拍拍手。"}, {"pageNum": 6, "image": "web/page6.jpg", "text": "哇！山頂上有一個好大的山洞！\n裡面黑黑的，好可怕。\n「怎麼辦？好暗好暗！」\n三隻小恐龍手牽手，\n一起慢慢走進去。\n「不怕不怕，我們一起！」"}, {"pageNum": 7, "image": "web/page7.jpg", "text": "山洞裡面有好多好多螢火蟲！\n一閃一閃，好漂亮！\n「哇——好像星星！」\n螢火蟲帶著他們，\n走呀走，走到山洞的另一邊。"}, {"pageNum": 8, "image": "web/page8.jpg", "text": "出了山洞，眼前是——\n好大好大的花園！\n紅的花、黃的花、紫的花，\n到處都是花！\n「好漂亮！好漂亮！」\n三隻小恐龍開心地跳呀跳。"}, {"pageNum": 9, "image": "web/page9.jpg", "text": "他們找到了那朵最大的花。\n花瓣軟軟的，香香的。\n「我們一起聞聞看！」\n吸——好香好香！\n三隻小恐龍笑得好開心。"}, {"pageNum": 10, "image": "web/page10.jpg", "text": "太陽要下山了，\n天空變成橘色的。\n三隻小恐龍手牽手，\n慢慢走回家。\n「今天好好玩！」\n「因為我們一起呀！」\n三個好朋友在一起，\n什麼都做得到！"}]}];
+let activeTag = null;
+function init() { buildTagFilter(); renderShelf(); }
+function buildTagFilter() {
+  const allTags = new Set();
+  STORIES.forEach(s => s.tags.forEach(t => allTags.add(t)));
+  const c = document.getElementById('tagFilter');
+  c.innerHTML = '';
+  const ab = document.createElement('button');
+  ab.className = 'tag-btn active'; ab.textContent = '全部';
+  ab.onclick = () => { activeTag = null; updateTagBtns(); filterBooks(); };
+  c.appendChild(ab);
+  allTags.forEach(tag => {
+    const b = document.createElement('button');
+    b.className = 'tag-btn'; b.textContent = tag;
+    b.onclick = () => { activeTag = tag; updateTagBtns(); filterBooks(); };
+    c.appendChild(b);
+  });
+}
+function updateTagBtns() {
+  document.querySelectorAll('.tag-btn').forEach(b => {
+    if (!activeTag) b.classList.toggle('active', b.textContent === '全部');
+    else b.classList.toggle('active', b.textContent === activeTag);
+  });
+}
+function filterBooks() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const f = STORIES.filter(s => {
+    const ms = !q || s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) || s.tags.some(t => t.includes(q)) || s.subtitle.toLowerCase().includes(q);
+    const mt = !activeTag || s.tags.includes(activeTag);
+    return ms && mt;
+  });
+  renderShelf(f);
+}
+function renderShelf(stories) {
+  stories = stories || STORIES;
+  const c = document.getElementById('bookshelf');
+  if (!stories.length) { c.innerHTML = '<div class="no-results"><div class="big-emoji">🔍</div><p>找不到符合的故事呢～<br>試試其他關鍵字吧！</p></div>'; return; }
+  let h = '<div class="shelf-label">我的故事書 <span>' + stories.length + ' 本</span></div><div class="books-grid">';
+  stories.forEach(s => {
+    const idx = STORIES.indexOf(s);
+    h += '<div class="book-card" onclick="openBook(' + idx + ')"><div class="cover-wrap"><img src="' + s.coverThumb + '" alt="' + s.title + '" loading="lazy"><div class="cover-overlay"></div><div class="cover-title">' + s.title + '</div></div><div class="card-body"><div class="card-desc">' + s.description + '</div><div class="card-tags"><span class="card-age">' + s.age + '</span>';
+    s.tags.forEach(t => { h += '<span class="card-tag">' + t + '</span>'; });
+    h += '</div></div></div>';
+  });
+  h += '</div>';
+  c.innerHTML = h;
+}
+function openBook(idx) {
+  const s = STORIES[idx];
+  const r = document.getElementById('reader');
+  let h = '<div class="reader-header"><button class="btn-back" onclick="closeReader()">✕</button><h2>' + s.title + '</h2></div><div class="reader-pages">';
+  s.pages.forEach(p => {
+    h += '<div class="page-card" id="page-' + p.pageNum + '"><img src="' + p.image + '" alt="第' + p.pageNum + '頁"><div class="page-text"><div class="page-num">' + p.pageNum + '</div><p>';
+    const lines = p.text.split('\n');
+    h += lines.map(l => {
+      l = l.replace(/「([^」]*)」/g, '<span class="quote">「$1」</span>');
+      l = l.replace(/好(大|快|高|香|漂亮|厲害|可怕|暗|好玩)/g, '<span class="highlight">好$1</span>');
+      return l;
+    }).join('<br>');
+    h += '</p></div></div>';
+  });
+  h += '<div class="parent-tip"><h3>💡 給爸爸媽媽的小提示</h3><p>讀這本書的時候，可以在每次遇到「怎麼辦？」時停下來，問問孩子：「你覺得誰可以幫忙呢？」讓孩子猜猜看，增加互動樂趣！每位角色解決問題後，記得一起拍拍手，讓孩子感受到合作的喜悅。</p></div></div>';
+  h += '<div class="reader-nav">';
+  s.pages.forEach(p => { h += '<button class="nav-dot" onclick="scrollToPage(' + p.pageNum + ')">' + p.pageNum + '</button>'; });
+  h += '</div>';
+  r.innerHTML = h;
+  document.getElementById('readerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  r.scrollTop = 0;
+  r.onscroll = () => {
+    let cl = 1, md = Infinity;
+    s.pages.forEach(p => {
+      const el = document.getElementById('page-' + p.pageNum);
+      if (el) { const d = Math.abs(el.getBoundingClientRect().top - 100); if (d < md) { md = d; cl = p.pageNum; } }
+    });
+    document.querySelectorAll('.nav-dot').forEach(d => d.classList.toggle('active', parseInt(d.textContent) === cl));
+  };
+}
+function scrollToPage(n) { const el = document.getElementById('page-' + n); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function closeReader() { document.getElementById('readerOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReader(); });
+init();
+</script>
+</body>
+</html>
